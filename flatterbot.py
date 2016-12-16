@@ -23,7 +23,7 @@ def process_snapshot():
         else:
             object_phrase = ''
         phrase = 'Hey %s, looking nice today!%s' % (name, object_phrase)
-        subjects = name + object_name
+        subjects = name + object_name.replace(' ', '')
         print phrase
     except:
         print 'Is someone there? Do I know you?'
