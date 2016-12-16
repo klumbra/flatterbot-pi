@@ -2,11 +2,13 @@ import time
 import os
 import glob
 import boto3
+import subprocess
 
-DIR = '/media/sf_vm_share/flatterbot'
+BASE_DIR = '/media/sf_vm_share/flatterbot'
+MP3_DIR = 'mp3'
 
 def process_snapshot():
-    image_paths = [file for file in glob.glob(os.path.join(DIR, '*.jpg'))]
+    image_paths = [file for file in glob.glob(os.path.join(BASE_DIR, '*.jpg'))]
     image_paths.sort(key=os.path.getmtime)
     latest_image_path = image_paths[-1]
 
@@ -17,20 +19,31 @@ def process_snapshot():
     try:
         res = client.search_faces_by_image(CollectionId='flatterees', MaxFaces=1, FaceMatchThreshold=.7, Image=image)
         flatteree = res['FaceMatches'][0]['Face']['ExternalImageId']
-        print 'Hey %s, looking nice today!' % (flatteree)
-        #say_name(flatteree)
+        phrase = 'Hey %s, looking nice today!' % (flatteree)
+        subjects = flatteree
+        print phrase
     except:
         print 'Is someone there? Do I know you?'
+    say_name(subjects, phrase)
 
-def say_name(name):
-    client = boto3.client('polly')
-    res = client.synthesize_speech(OutputFormat='pcm', Text=name, VoiceId='Mads')
+def say_name(subjects, phrase):
+    subject_mp3 = '%s.mp3' % subjects
+    mp3s = [f for f in os.listdir(MP3_DIR) if os.path.isfile(os.path.join(MP3_DIR, f))]
+    subject_mp3_path = os.path.join(MP3_DIR, subject_mp3)
+    if subject_mp3 not in mp3s:
+        client = boto3.client('polly')
+        res = client.synthesize_speech(OutputFormat='mp3', Text=phrase, VoiceId='Joanna')
+
+        f = open(subject_mp3_path, 'wb')
+        f.write(res['AudioStream'].read())
+        f.close()
+    subprocess.Popen("mpg123 -q %s" % subject_mp3_path, shell=True)
 
 def main():
-    before = dict ([(f, None) for f in os.listdir (DIR)])
+    before = dict ([(f, None) for f in os.listdir (BASE_DIR)])
     while 1:
       time.sleep (3)
-      after = dict ([(f, None) for f in os.listdir (DIR)])
+      after = dict ([(f, None) for f in os.listdir (BASE_DIR)])
       added = [f for f in after if not f in before]
       if added:
           process_snapshot()
