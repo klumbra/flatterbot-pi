@@ -15,16 +15,25 @@ def process_snapshot():
     image = {}
     image['Bytes'] = open(latest_image_path).read()
 
-    client = boto3.client('rekognition')
     try:
-        res = client.search_faces_by_image(CollectionId='flatterees', MaxFaces=1, FaceMatchThreshold=.7, Image=image)
-        flatteree = res['FaceMatches'][0]['Face']['ExternalImageId']
-        phrase = 'Hey %s, looking nice today!' % (flatteree)
-        subjects = flatteree
+        name = return_face_name(image)
+        phrase = 'Hey %s, looking nice today!' % (name)
+        subjects = name
         print phrase
     except:
         print 'Is someone there? Do I know you?'
     say_name(subjects, phrase)
+
+def return_face_name(image):
+    client = boto3.client('rekognition')
+    res = client.search_faces_by_image(
+            CollectionId='flatterees',
+            MaxFaces=1,
+            FaceMatchThreshold=.7,
+            Image=image
+            )
+    name = res['FaceMatches'][0]['Face']['ExternalImageId']
+    return name
 
 def say_name(subjects, phrase):
     subject_mp3 = '%s.mp3' % subjects
