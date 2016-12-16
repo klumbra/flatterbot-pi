@@ -17,8 +17,13 @@ def process_snapshot():
 
     try:
         name = return_face_name(image)
-        phrase = 'Hey %s, looking nice today!' % (name)
-        subjects = name
+        object_name = return_object_name(image)
+        if object_name != '':
+            object_phrase = ' Sweet %s!' % (object_name.lower())
+        else:
+            object_phrase = ''
+        phrase = 'Hey %s, looking nice today!%s' % (name, object_phrase)
+        subjects = name + object_name
         print phrase
     except:
         print 'Is someone there? Do I know you?'
@@ -34,6 +39,25 @@ def return_face_name(image):
             )
     name = res['FaceMatches'][0]['Face']['ExternalImageId']
     return name
+
+def return_object_name(image):
+    client = boto3.client('rekognition')
+    res = client.detect_labels(
+            MinConfidence=.8,
+            Image=image
+            )
+    labels = {d['Name']: d['Confidence'] for d in res['Labels']}
+    with open('excluded_labels.txt', 'r') as f:
+        excluded_labels = [line.rstrip('\n') for line in f]
+    
+    for k in excluded_labels:
+        labels.pop(k, None)
+    
+    if labels:
+        top_label = max(labels, key=labels.get)
+    else:
+        top_label = ''
+    return top_label
 
 def say_name(subjects, phrase):
     subject_mp3 = '%s.mp3' % subjects

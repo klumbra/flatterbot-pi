@@ -1,0 +1,10 @@
+People
+Person
+Human
+Hair
+Head
+Portrait
+Man
+Face
+Selfie
+Haircut
