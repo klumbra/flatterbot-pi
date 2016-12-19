@@ -3,31 +3,13 @@ import os
 import glob
 import boto3
 import subprocess
+import picamera
+import sys
+from select import select
 
-BASE_DIR = '/media/sf_vm_share/flatterbot'
+BASE_DIR = '.'
 MP3_DIR = 'mp3'
 
-def process_snapshot():
-    image_paths = [file for file in glob.glob(os.path.join(BASE_DIR, '*.jpg'))]
-    image_paths.sort(key=os.path.getmtime)
-    latest_image_path = image_paths[-1]
-
-    image = {}
-    image['Bytes'] = open(latest_image_path).read()
-
-    try:
-        name = return_face_name(image)
-        object_name = return_object_name(image)
-        if object_name != '':
-            object_phrase = ' Sweet %s!' % (object_name.lower())
-        else:
-            object_phrase = ''
-        phrase = 'Hey %s, looking nice today!%s' % (name, object_phrase)
-        subjects = name + object_name.replace(' ', '')
-        print phrase
-    except:
-        print 'Is someone there? Do I know you?'
-    say_name(subjects, phrase)
 
 def return_face_name(image):
     client = boto3.client('rekognition')
@@ -55,33 +37,67 @@ def return_object_name(image):
     
     if labels:
         top_label = max(labels, key=labels.get)
+        top_label = top_label.replace(' ', '')
     else:
         top_label = ''
     return top_label
 
-def say_name(subjects, phrase):
-    subject_mp3 = '%s.mp3' % subjects
-    mp3s = [f for f in os.listdir(MP3_DIR) if os.path.isfile(os.path.join(MP3_DIR, f))]
-    subject_mp3_path = os.path.join(MP3_DIR, subject_mp3)
-    if subject_mp3 not in mp3s:
+def get_phrase(phrase_key, phrase):
+    needed_mp3 = '%s.mp3' % phrase_key
+    existing_mp3s = [f for f in os.listdir(MP3_DIR) if os.path.isfile(os.path.join(MP3_DIR, f))]
+    needed_mp3_path = os.path.join(MP3_DIR, needed_mp3)
+    if needed_mp3 not in existing_mp3s:
         client = boto3.client('polly')
         res = client.synthesize_speech(OutputFormat='mp3', Text=phrase, VoiceId='Joanna')
 
-        f = open(subject_mp3_path, 'wb')
+        f = open(needed_mp3_path, 'wb')
         f.write(res['AudioStream'].read())
         f.close()
-    subprocess.Popen("mpg123 -q %s" % subject_mp3_path, shell=True)
+
+def play_phrase(phrase_key):
+    needed_mp3 = '%s.mp3' % phrase_key
+    needed_mp3_path = os.path.join(MP3_DIR, needed_mp3)
+    subprocess.Popen("omxplayer -o local %s > /dev/null 2>&1" % needed_mp3_path, shell=True)
+
+def say_and_annotate(phrase_key, phrase, camera):
+    get_phrase(phrase_key, phrase) 
+    camera.annotate_text = phrase.upper()
+    play_phrase(phrase_key)
+    time.sleep(2)
+    camera.annotate_text = ''
 
 def main():
-    before = dict ([(f, None) for f in os.listdir (BASE_DIR)])
-    while 1:
-      time.sleep (3)
-      after = dict ([(f, None) for f in os.listdir (BASE_DIR)])
-      added = [f for f in after if not f in before]
-      if added:
-          process_snapshot()
-      before = after
+    with picamera.PiCamera() as camera:
+        camera.resolution = (640, 480)
+        camera.framerate = 24
+        camera.annotate_text_size = 80
+        camera.start_preview()
+        while True:
+            raw_input('')
+            image_path =  os.path.join(BASE_DIR, 'latest_capture.jpg')
+            camera.capture(image_path)
+            image = {}
+            image['Bytes'] = open(image_path).read()
+
+            worked = False
+            try:
+                name = return_face_name(image)
+                object_name = return_object_name(image)
+                worked = True
+            except:
+                worked = False
+
+            if worked:
+                phrase = "Hey %s" % (name)
+                say_and_annotate(name, phrase, camera)
+                say_and_annotate("LookingNice", "Looking nice today.", camera)
+
+                if object_name != '':
+                    object_phrase = ' Sweet %s!' % (object_name)
+                    say_and_annotate(object_name, object_phrase, camera)
+            else:
+                say_and_annotate("Exception", "Do I know you?", camera)
+            print 'done'
 
 if __name__ == '__main__':
     main()
-
