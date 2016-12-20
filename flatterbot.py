@@ -57,7 +57,7 @@ def get_phrase(phrase_key, phrase):
 def play_phrase(phrase_key):
     needed_mp3 = '%s.mp3' % phrase_key
     needed_mp3_path = os.path.join(MP3_DIR, needed_mp3)
-    subprocess.Popen("omxplayer -o local %s > /dev/null 2>&1" % needed_mp3_path, shell=True)
+    subprocess.Popen("mpg123 -q %s" % needed_mp3_path, shell=True)
 
 def say_and_annotate(phrase_key, phrase, camera):
     get_phrase(phrase_key, phrase) 
