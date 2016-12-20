@@ -98,7 +98,6 @@ def main():
                     say_and_annotate(object_name, object_phrase, camera)
             else:
                 say_and_annotate("Exception", "Do I know you?", camera)
-            print 'done'
 
 if __name__ == '__main__':
     main()
