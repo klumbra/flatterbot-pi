@@ -43,7 +43,7 @@ def return_object_name(image):
     return top_label
 
 def get_phrase(phrase_key, phrase):
-    phrase = '<speak><break time="700ms" />' + phrase + </speak>'
+    phrase = '<speak><break time="900ms" />' + phrase + '</speak>'
     needed_mp3 = '%s.mp3' % phrase_key
     existing_mp3s = [f for f in os.listdir(MP3_DIR) if os.path.isfile(os.path.join(MP3_DIR, f))]
     needed_mp3_path = os.path.join(MP3_DIR, needed_mp3)
