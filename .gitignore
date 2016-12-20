@@ -1,5 +1,4 @@
 /venv/
 /depr/
 /mp3/*.mp3
-!/mp3/silence.mp3
 /latest_capture.jpg

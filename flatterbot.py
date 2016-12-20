@@ -89,8 +89,6 @@ def main():
 
             if worked:
                 phrase = "Hey %s" % (name)
-                # play silent mp3 to ready audio
-                play_phrase('silence')
                 say_and_annotate(name, phrase, camera)
                 say_and_annotate("LookingNice", "Looking nice today.", camera)
 
