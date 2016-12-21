@@ -6,10 +6,11 @@ import subprocess
 import picamera
 import sys
 from select import select
+import math
 
 BASE_DIR = '.'
 MP3_DIR = 'mp3'
-
+COL_WIDTH = 15
 
 def return_face_name(image):
     client = boto3.client('rekognition')
@@ -62,9 +63,22 @@ def play_phrase(phrase_key):
 
 def say_and_annotate(phrase_key, phrase, camera):
     get_phrase(phrase_key, phrase) 
-    camera.annotate_text = phrase.upper()
+    annotate_words_delay(phrase, camera)
     play_phrase(phrase_key)
     time.sleep(2)
+
+def annotate_words_delay(phrase, camera):
+    phrase = phrase.upper()
+    words = phrase.split()
+    displayed_words = ''
+
+    for word in words:
+        empty_char_count = COL_WIDTH - len(word)
+        empty_chars_left = ' ' * int(math.ceil(empty_char_count / 2))
+        empty_chars_right = ' ' * int(math.floor(empty_char_count / 2))
+        displayed_words += empty_chars_left + word + empty_chars_right
+        camera.annotate_text = displayed_words
+        time.sleep(.75)
     camera.annotate_text = ''
 
 def main():
