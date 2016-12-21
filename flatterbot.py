@@ -82,6 +82,10 @@ def annotate_words_delay(phrase, camera):
         time.sleep(.75)
     camera.annotate_text = ''
 
+def add_face(image, new_face_name):
+    client = boto3.client('rekognition')
+    res = client.index_faces(CollectionId='flatterees', ExternalImageId=new_face_name, Image=image)
+
 def main():
     with picamera.PiCamera() as camera:
         camera.resolution = (640, 480)
@@ -89,7 +93,7 @@ def main():
         camera.annotate_text_size = TEXT_SIZE
         camera.start_preview()
         while True:
-            raw_input('')
+            new_face_name = raw_input('')
             image_path =  os.path.join(BASE_DIR, 'latest_capture.jpg')
             camera.capture(image_path)
             image = {}
@@ -97,6 +101,9 @@ def main():
 
             worked = False
             try:
+                if 'add ' in new_face_name:
+                    new_face_name = new_face_name.replace('add ', '')
+                    add_face(image, new_face_name)
                 name = return_face_name(image)
                 object_name = return_object_name(image)
                 worked = True
