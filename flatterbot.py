@@ -10,8 +10,8 @@ import math
 
 BASE_DIR = '.'
 MP3_DIR = 'mp3'
-COL_WIDTH = 9
-TEXT_SIZE = 140
+COL_WIDTH = 10
+TEXT_SIZE = 120
 
 def return_face_name(image):
     client = boto3.client('rekognition')
@@ -106,10 +106,10 @@ def main():
             if worked:
                 phrase = "Hey %s" % (name)
                 say_and_annotate(name, phrase, camera)
-                say_and_annotate("LookingNice", "Looking nice today.", camera)
+                say_and_annotate("LookingNice", "Looking nice today", camera)
 
                 if object_name != '':
-                    object_phrase = ' Sweet %s!' % (object_name)
+                    object_phrase = ' Sweet %s' % (object_name)
                     say_and_annotate(object_name, object_phrase, camera)
             else:
                 say_and_annotate("Exception", "Do I know you?", camera)
