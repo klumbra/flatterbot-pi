@@ -10,7 +10,8 @@ import math
 
 BASE_DIR = '.'
 MP3_DIR = 'mp3'
-COL_WIDTH = 15
+COL_WIDTH = 9
+TEXT_SIZE = 140
 
 def return_face_name(image):
     client = boto3.client('rekognition')
@@ -85,7 +86,7 @@ def main():
     with picamera.PiCamera() as camera:
         camera.resolution = (640, 480)
         camera.framerate = 24
-        camera.annotate_text_size = 80
+        camera.annotate_text_size = TEXT_SIZE
         camera.start_preview()
         while True:
             raw_input('')
